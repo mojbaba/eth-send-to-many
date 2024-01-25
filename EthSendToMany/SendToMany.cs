@@ -30,10 +30,11 @@ public class SendToMany
         var senderKey = new EthECKey(_privateKey);
         var senderAddress = senderKey.GetPublicAddress();
         var nonce = (await web3.Eth.Transactions.GetTransactionCount.SendRequestAsync(senderAddress)).Value;
-        var gasPrice = (await web3.Eth.GasPrice.SendRequestAsync()).Value;
+        var gasPrice = (await web3.Eth.GasPrice.SendRequestAsync()).Value + 
+                       Web3.Convert.ToWei(5, Nethereum.Util.UnitConversion.EthUnit.Gwei);
         var gasLimit = new BigInteger(21000);
         var chainId = new BigInteger(_chainId);
-        var maxPriorityFeePerGas = Web3.Convert.ToWei(1, Nethereum.Util.UnitConversion.EthUnit.Gwei);
+        var maxPriorityFeePerGas = Web3.Convert.ToWei(2, Nethereum.Util.UnitConversion.EthUnit.Gwei);
 
         var results = new List<string>();
 

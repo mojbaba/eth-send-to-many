@@ -42,7 +42,7 @@ public class BalanceRequirement
         var senderAddress = GetSenderAddress();
 
         var currentBalance = await web3.Eth.GetBalance.SendRequestAsync(senderAddress);
-        var gasPrice = (await web3.Eth.GasPrice.SendRequestAsync()).Value;
+        var gasPrice = (await web3.Eth.GasPrice.SendRequestAsync()).Value  + Web3.Convert.ToWei(5, Nethereum.Util.UnitConversion.EthUnit.Gwei);
 
         var totalGasCost = new BigInteger(21000) * gasPrice;
         var totalAmount = _receivers.Select(a => a.Amount).Aggregate((a, b) => a + b);
@@ -57,7 +57,7 @@ public class BalanceRequirement
         var senderAddress = GetSenderAddress();
 
         var currentBalance = await web3.Eth.GetBalance.SendRequestAsync(senderAddress);
-        var gasPrice = (await web3.Eth.GasPrice.SendRequestAsync()).Value;
+        var gasPrice = (await web3.Eth.GasPrice.SendRequestAsync()).Value  + Web3.Convert.ToWei(5, Nethereum.Util.UnitConversion.EthUnit.Gwei);
 
         var totalGasCost = new BigInteger(21000) * gasPrice * _receivers.Count();
         var totalAmount = _receivers.Select(a => a.Amount).Aggregate((a, b) => a + b);
