@@ -63,6 +63,7 @@ if(File.Exists("receivers.csv") == false)
 
 var receivers = File.ReadAllLines("receivers.csv")
     .Skip(1)
+    .Where(line => string.IsNullOrWhiteSpace(line) == false)
     .Select(line => line.Split(','))
     .Select(line => new Receiver()
     {
