@@ -41,7 +41,6 @@ public class SendToMany
         {
             try
             {
-                nonce = nonce + 1;
                 var receiverAddress = _recievers.ElementAt(i).Address.ToLower();
                 var value = Web3.Convert.ToWei(_recievers.ElementAt(i).Amount, UnitConversion.EthUnit.Ether);
                 var transaction1559 = new Transaction1559(chainId, nonce, maxPriorityFeePerGas, gasPrice, gasLimit,
@@ -59,6 +58,7 @@ public class SendToMany
                 Console.WriteLine(result);
 
                 results.Add(result);
+                nonce = nonce + 1;
             }
             catch (Exception e)
             {
