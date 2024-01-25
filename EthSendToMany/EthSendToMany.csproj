@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Nethereum.HdWallet" Version="4.8.0" />
+    <PackageReference Include="SharPrompt" Version="2.4.5" />
   </ItemGroup>
 
 </Project>
