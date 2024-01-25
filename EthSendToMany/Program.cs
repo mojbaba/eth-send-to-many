@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Globalization;
 using EthSendToMany;
 using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Signer;
@@ -68,7 +69,7 @@ var receivers = File.ReadAllLines("receivers.csv")
     .Select(line => new Receiver()
     {
         Address = line[0].Trim(),
-        Amount = decimal.Parse(line[1].Trim())
+        Amount = decimal.Parse(line[1].Trim(), CultureInfo.InvariantCulture)
     })
     .ToArray();
     
