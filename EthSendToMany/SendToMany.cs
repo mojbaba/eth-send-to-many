@@ -60,7 +60,7 @@ public class SendToMany
                 results.Add(result);
                 nonce = nonce + 1;
                 
-                await Task.Delay(1000);
+                await Task.Delay(2000);
             }
             catch (Exception e)
             {
