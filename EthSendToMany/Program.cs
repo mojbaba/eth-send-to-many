@@ -55,14 +55,19 @@ else
 
 
 // read csv from file receivers.csv in the same directory as the executable ignores the first line first column is the address second column is the amount
+if(File.Exists("receivers.csv") == false)
+{
+    Console.WriteLine("receivers.csv does not exist");
+    return;
+}
 
 var receivers = File.ReadAllLines("receivers.csv")
     .Skip(1)
     .Select(line => line.Split(','))
     .Select(line => new Receiver()
     {
-        Address = line[0],
-        Amount = decimal.Parse(line[1])
+        Address = line[0].Trim(),
+        Amount = decimal.Parse(line[1].Trim())
     })
     .ToArray();
     
@@ -82,14 +87,19 @@ Console.WriteLine($"Current balance of {balanceRequirement.GetSenderAddress()} i
 
 Console.WriteLine($"Required balance of {balanceRequirement.GetSenderAddress()} is {requiredBalance} ether");
 
-if (decimal.Parse(requiredBalance) > 0)
+if (decimal.Parse(requiredBalance) > decimal.Parse(currentBalance))
 {
     Console.WriteLine("Insufficient balance");
     
-    Console.WriteLine($"{balanceRequirement.GetSenderAddress()} needs {requiredBalance} ether to send {receivers.Length} transactions");
+    var lackOfBalance = await balanceRequirement.CalculateLackOfBalanceAsync();
     
-    Console.WriteLine($"Please send {requiredBalance} ether to {balanceRequirement.GetSenderAddress()} and try again");
+    Console.WriteLine($"Please send {lackOfBalance} ether to {balanceRequirement.GetSenderAddress()} and try again");
+
+    return;
 }
+
+if(Sharprompt.Prompt.Confirm($"Do you want to continue to send {receivers.Length} transactions?") == false)
+    return;
 
 // send to many
 
@@ -98,3 +108,10 @@ var sendToMany = new SendToMany(url, chainId, privateKey, receivers);
 var results = await sendToMany.SendToManyAsync();
 
 File.WriteAllLines("results.txt", results);
+
+if(results.Count() == receivers.Count())
+    Console.WriteLine("Done. Check results.txt for details");
+else
+{
+    Console.WriteLine("Something went wrong. Check results.txt for details");
+}

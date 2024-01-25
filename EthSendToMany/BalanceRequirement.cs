@@ -25,14 +25,14 @@ public class BalanceRequirement
 
         return senderAddress;
     }
-    
+
     public async Task<string> GetCurrentBalanceAsync()
     {
         var web3 = new Web3(_url);
         var senderAddress = GetSenderAddress();
-        
+
         var currentBalance = await web3.Eth.GetBalance.SendRequestAsync(senderAddress);
-        
+
         return Web3.Convert.FromWei(currentBalance.Value, UnitConversion.EthUnit.Ether).ToString();
     }
 
@@ -40,16 +40,29 @@ public class BalanceRequirement
     {
         var web3 = new Web3(_url);
         var senderAddress = GetSenderAddress();
-        
+
         var currentBalance = await web3.Eth.GetBalance.SendRequestAsync(senderAddress);
         var gasPrice = (await web3.Eth.GasPrice.SendRequestAsync()).Value;
-        
+
         var totalGasCost = new BigInteger(21000) * gasPrice;
-        var totalAmount = _receivers.Select(a=> a.Amount).Aggregate((a, b) => a + b);
+        var totalAmount = _receivers.Select(a => a.Amount).Aggregate((a, b) => a + b);
         var totalCost = totalGasCost + Web3.Convert.ToWei(totalAmount, UnitConversion.EthUnit.Ether);
-        
-        var requiredBalance = currentBalance.Value - totalCost;
-        
-        return Web3.Convert.FromWei(requiredBalance, UnitConversion.EthUnit.Ether).ToString();
+
+        return Web3.Convert.FromWei(totalCost, UnitConversion.EthUnit.Ether).ToString();
+    }
+
+    public async Task<string> CalculateLackOfBalanceAsync()
+    {
+        var web3 = new Web3(_url);
+        var senderAddress = GetSenderAddress();
+
+        var currentBalance = await web3.Eth.GetBalance.SendRequestAsync(senderAddress);
+        var gasPrice = (await web3.Eth.GasPrice.SendRequestAsync()).Value;
+
+        var totalGasCost = new BigInteger(21000) * gasPrice * _receivers.Count();
+        var totalAmount = _receivers.Select(a => a.Amount).Aggregate((a, b) => a + b);
+        var totalCost = totalGasCost + Web3.Convert.ToWei(totalAmount + 0.001m, UnitConversion.EthUnit.Ether);
+
+        return Web3.Convert.FromWei(totalCost - currentBalance.Value, UnitConversion.EthUnit.Ether).ToString();
     }
 }

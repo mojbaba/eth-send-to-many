@@ -41,25 +41,32 @@ public class SendToMany
         {
             try
             {
-                var receiverAddress = _recievers.ElementAt(i).Address;
+                nonce = nonce + 1;
+                var receiverAddress = _recievers.ElementAt(i).Address.ToLower();
                 var value = Web3.Convert.ToWei(_recievers.ElementAt(i).Amount, UnitConversion.EthUnit.Ether);
                 var transaction1559 = new Transaction1559(chainId, nonce, maxPriorityFeePerGas, gasPrice, gasLimit,
-                    receiverAddress, value, null, new List<AccessListItem>());
+                    receiverAddress, value, null, null);
 
                 transaction1559.Sign(senderKey);
 
-                var rawTransaction = transaction1559.GetRLPEncodedRaw().ToHex(true);
+                var rawTransaction = transaction1559.GetRLPEncoded().ToHex(true);
 
                 var transactionHash = await web3.Eth.Transactions.SendRawTransaction.SendRequestAsync(rawTransaction);
 
                 var result =
                     $"[{i + 1}/{_recievers.Count()}] Sent {value} wei to {receiverAddress} successfully with transaction hash {transactionHash}";
+                
+                Console.WriteLine(result);
 
                 results.Add(result);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                var result =
+                    e.Message;
+                
+                results.Add(result);
+                Console.WriteLine(result);
                 break;
             }
         }
