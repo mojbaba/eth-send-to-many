@@ -36,33 +36,35 @@ public class BalanceRequirement
         return Web3.Convert.FromWei(currentBalance.Value, UnitConversion.EthUnit.Ether).ToString();
     }
 
-    public async Task<string> CalculateRequiredBalanceAsync()
+    public decimal TotalFee(decimal gasPriceGwei, int maxPriorityFeePerGas)
     {
-        var web3 = new Web3(_url);
-        var senderAddress = GetSenderAddress();
+        var gasPrice = Web3.Convert.ToWei(gasPriceGwei, Nethereum.Util.UnitConversion.EthUnit.Gwei);
+        var totalGasCost = new BigInteger(21000) * (maxPriorityFeePerGas + gasPrice);
+        var count = _receivers.Count();
+        var totalFee = totalGasCost * count;
 
-        var currentBalance = await web3.Eth.GetBalance.SendRequestAsync(senderAddress);
-        var gasPrice = (await web3.Eth.GasPrice.SendRequestAsync()).Value  + Web3.Convert.ToWei(5, Nethereum.Util.UnitConversion.EthUnit.Gwei);
-
-        var totalGasCost = new BigInteger(21000) * gasPrice;
-        var totalAmount = _receivers.Select(a => a.Amount).Aggregate((a, b) => a + b);
-        var totalCost = totalGasCost + Web3.Convert.ToWei(totalAmount, UnitConversion.EthUnit.Ether);
-
-        return Web3.Convert.FromWei(totalCost, UnitConversion.EthUnit.Ether).ToString();
+        return Web3.Convert.FromWei(totalFee, UnitConversion.EthUnit.Ether);
     }
 
-    public async Task<string> CalculateLackOfBalanceAsync()
+    public decimal TotalAmountToBeSent()
     {
-        var web3 = new Web3(_url);
-        var senderAddress = GetSenderAddress();
+        return _receivers.Select(a => a.Amount).Aggregate((a, b) => a + b);
+    }
 
-        var currentBalance = await web3.Eth.GetBalance.SendRequestAsync(senderAddress);
-        var gasPrice = (await web3.Eth.GasPrice.SendRequestAsync()).Value  + Web3.Convert.ToWei(5, Nethereum.Util.UnitConversion.EthUnit.Gwei);
 
-        var totalGasCost = new BigInteger(21000) * gasPrice * _receivers.Count();
-        var totalAmount = _receivers.Select(a => a.Amount).Aggregate((a, b) => a + b);
-        var totalCost = totalGasCost + Web3.Convert.ToWei(totalAmount + 0.001m, UnitConversion.EthUnit.Ether);
+    public async Task<string> CalculateRequiredBalanceAsync(decimal gasPriceGwei, int maxPriorityFeePerGasGwei)
+    {
+        var totalFee = TotalFee(gasPriceGwei, maxPriorityFeePerGasGwei);
+        var totalAmountToBeSent = TotalAmountToBeSent();
 
-        return Web3.Convert.FromWei(totalCost - currentBalance.Value, UnitConversion.EthUnit.Ether).ToString();
+        return (totalFee + totalAmountToBeSent).ToString();
+    }
+
+    public async Task<string> CalculateLackOfBalanceAsync(decimal gasPriceGwei, int maxPriorityFeePerGasGwei)
+    {
+        var currentBalance = await GetCurrentBalanceAsync();
+        var requiredBalance = await CalculateRequiredBalanceAsync(gasPriceGwei, maxPriorityFeePerGasGwei);
+
+        return (decimal.Parse(requiredBalance) - decimal.Parse(currentBalance)).ToString();
     }
 }

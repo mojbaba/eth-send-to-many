@@ -24,17 +24,21 @@ public class SendToMany
         _chainId = chainId;
     }
 
-    public async Task<IEnumerable<string>> SendToManyAsync()
+    public async Task<IEnumerable<string>> SendToManyAsync(decimal gasPriceGwei , int maxPriorityFeePerGasGwei)
     {
         var web3 = new Web3(_url);
         var senderKey = new EthECKey(_privateKey);
         var senderAddress = senderKey.GetPublicAddress();
-        var nonce = (await web3.Eth.Transactions.GetTransactionCount.SendRequestAsync(senderAddress)).Value;
-        var gasPrice = (await web3.Eth.GasPrice.SendRequestAsync()).Value + 
-                       Web3.Convert.ToWei(5, Nethereum.Util.UnitConversion.EthUnit.Gwei);
+        var nonce = (await web3.Eth.Transactions.GetTransactionCount.SendRequestAsync(senderAddress)).Value;        
+
+        var gasPrice = Web3.Convert.ToWei(gasPriceGwei, Nethereum.Util.UnitConversion.EthUnit.Gwei);
+
+        var maxPriorityFeePerGas = Web3.Convert.ToWei(maxPriorityFeePerGasGwei, Nethereum.Util.UnitConversion.EthUnit.Gwei);
+
+
+
         var gasLimit = new BigInteger(21000);
         var chainId = new BigInteger(_chainId);
-        var maxPriorityFeePerGas = Web3.Convert.ToWei(2, Nethereum.Util.UnitConversion.EthUnit.Gwei);
 
         var results = new List<string>();
 

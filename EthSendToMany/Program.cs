@@ -4,6 +4,8 @@ using System.Globalization;
 using EthSendToMany;
 using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Signer;
+using Nethereum.Util;
+using Nethereum.Web3;
 using Sharprompt;
 
 string privateKey;
@@ -81,7 +83,17 @@ var url = Sharprompt.Prompt.Input<string>("Url");
 
 var balanceRequirement = new BalanceRequirement(url, privateKey, receivers);
 
-var requiredBalance = await balanceRequirement.CalculateRequiredBalanceAsync();
+var web3 = new Web3(url);
+
+var gasPriceWei = (await web3.Eth.GasPrice.SendRequestAsync()).Value;
+
+var gasPriceGwei =  Web3.Convert.FromWei(gasPriceWei, UnitConversion.EthUnit.Gwei);
+
+gasPriceGwei = Sharprompt.Prompt.Input<int>("Gas Price (Gwei)", gasPriceGwei);
+
+var maxPriorityFeePerGasGwei = Sharprompt.Prompt.Input<int>("Max Priority Fee Per Gas (Gwei)", 2);
+
+var requiredBalance = await balanceRequirement.CalculateRequiredBalanceAsync(gasPriceGwei, maxPriorityFeePerGasGwei);
 
 var currentBalance = await balanceRequirement.GetCurrentBalanceAsync();
 
@@ -89,14 +101,18 @@ Console.WriteLine($"Current balance of {balanceRequirement.GetSenderAddress()} i
 
 Console.WriteLine($"Required balance of {balanceRequirement.GetSenderAddress()} is {requiredBalance} ether");
 
+Console.WriteLine($"Total fee is {balanceRequirement.TotalFee(gasPriceGwei, maxPriorityFeePerGasGwei)} ether");
+
+Console.WriteLine($"Total amount to be sent is {balanceRequirement.TotalAmountToBeSent()} ether");
+
 if (decimal.Parse(requiredBalance) > decimal.Parse(currentBalance))
 {
     Console.WriteLine("Insufficient balance");
     
-    var lackOfBalance = await balanceRequirement.CalculateLackOfBalanceAsync();
-    
+    var lackOfBalance = await balanceRequirement.CalculateLackOfBalanceAsync(gasPriceGwei, maxPriorityFeePerGasGwei);
+    Console.ForegroundColor = ConsoleColor.Magenta;
     Console.WriteLine($"Please send {lackOfBalance} ether to {balanceRequirement.GetSenderAddress()} and try again");
-
+    Console.ResetColor();
     return;
 }
 
@@ -107,7 +123,7 @@ if(Sharprompt.Prompt.Confirm($"Do you want to continue to send {receivers.Length
 
 var sendToMany = new SendToMany(url, chainId, privateKey, receivers);
 
-var results = await sendToMany.SendToManyAsync();
+var results = await sendToMany.SendToManyAsync(gasPriceGwei, maxPriorityFeePerGasGwei);
 
 File.WriteAllLines("results.txt", results);
 
