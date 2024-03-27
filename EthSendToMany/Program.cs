@@ -89,7 +89,7 @@ var gasPriceWei = (await web3.Eth.GasPrice.SendRequestAsync()).Value;
 
 var gasPriceGwei =  Web3.Convert.FromWei(gasPriceWei, UnitConversion.EthUnit.Gwei);
 
-gasPriceGwei = Sharprompt.Prompt.Input<int>("Gas Price (Gwei)", gasPriceGwei);
+gasPriceGwei = (decimal)Sharprompt.Prompt.Input<int>("Gas Price (Gwei)", gasPriceGwei);
 
 var maxPriorityFeePerGasGwei = Sharprompt.Prompt.Input<int>("Max Priority Fee Per Gas (Gwei)", 2);
 
