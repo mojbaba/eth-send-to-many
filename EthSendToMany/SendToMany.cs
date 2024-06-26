@@ -6,6 +6,7 @@ using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Signer;
 using Nethereum.Util;
 using Nethereum.Web3;
+using Sharprompt;
 
 namespace EthSendToMany;
 
@@ -29,7 +30,19 @@ public class SendToMany
         var web3 = new Web3(_url);
         var senderKey = new EthECKey(_privateKey);
         var senderAddress = senderKey.GetPublicAddress();
+        
+
+
         var nonce = (await web3.Eth.Transactions.GetTransactionCount.SendRequestAsync(senderAddress)).Value;        
+
+        if(Sharprompt.Prompt.Confirm($"current nonce is {(long)nonce}, do you want to set it custom?")){
+            var customNonce = Prompt.Input<long>("enter the custom nonce");
+            nonce = new BigInteger(customNonce);
+
+            if(Prompt.Confirm($"are you sure about this nonce? {(long)nonce}") == false){
+                throw new TaskCanceledException("nonce is not confirmed");
+            }
+        }
 
         var gasPrice = Web3.Convert.ToWei(gasPriceGwei, Nethereum.Util.UnitConversion.EthUnit.Gwei);
 
